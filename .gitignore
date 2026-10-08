@@ -1,0 +1,57 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Local secrets ###
+# Holds the developer's real database password. Only application.properties,
+# which reads from environment variables, is committed.
+application-local.properties
+*.local.properties
+
+### Environment / credentials ###
+.env
+.env.*
+!.env.example
+
+### OS noise ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
+
+### AI agent local tooling ###
+# Copilot "java upgrade" and "modernize" hooks write local run logs and state.
+# These are per-machine artefacts and must not be committed.
+.github/java-upgrade/
+.github/modernize/
