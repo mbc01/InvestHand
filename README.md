@@ -1,137 +1,209 @@
 # InvestHand
 
-A Spring Boot REST API for managing investment group members and their monthly
-contributions.
+> A secure investment-group management platform for managing members, monthly contributions, payment status, and financial activity.
 
-## Stack
+InvestHand is a backend system designed to support the management of investment groups and their members. It provides a structured REST API for recording and retrieving member contributions while enforcing authentication, authorization, validation, and business rules at the application layer.
 
-| | |
+The project demonstrates practical backend software engineering using **Java, Spring Boot, PostgreSQL, Spring Security, automated testing, and CI/CD**.
+
+---
+
+## 🚀 Overview
+
+Managing group investments and monthly contributions can become difficult when records are handled manually.
+
+InvestHand provides a centralized backend for managing contribution records while enforcing rules such as:
+
+- One contribution per member per month
+- Automatic payment-status determination
+- Secure administrator-controlled writes
+- Authenticated access to contribution records
+- Validation of financial amounts
+- Meaningful API error responses
+- Automated testing
+- Continuous integration
+
+The system is designed with maintainability, security, data integrity, and reliable backend behavior in mind.
+
+---
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
 |---|---|
-| Language | Java 21 |
-| Framework | Spring Boot 3.5.10 |
-| Persistence | Spring Data JPA + Hibernate |
-| Database | PostgreSQL 16 |
-| Security | Spring Security + BCrypt |
-| Build | Maven 3.8+ (wrapper included) |
-| Tests | JUnit 5, Mockito, MockMvc, H2 (in-memory) |
+| **Java 21** | Core programming language |
+| **Spring Boot 3.5.10** | Backend framework |
+| **Spring Data JPA** | Data access and persistence |
+| **Hibernate** | ORM |
+| **PostgreSQL 16** | Relational database |
+| **Spring Security** | Authentication and authorization |
+| **BCrypt** | Password hashing |
+| **Maven** | Build and dependency management |
+| **JUnit 5** | Unit testing |
+| **Mockito** | Mock-based testing |
+| **MockMvc** | API testing |
+| **H2** | In-memory testing database |
+| **GitHub Actions** | Continuous integration |
 
-Java 21 is enforced by `<java.version>` in `pom.xml` and pinned again in the
-CI workflow. Building on an older JDK will fail.
+Java 21 is required by the project configuration and CI pipeline.
 
-## Project structure
+---
+
+## ✨ Key Features
+
+### Contribution Management
+
+- Record member contributions
+- Retrieve all contributions
+- Retrieve contributions for a specific member
+- Prevent duplicate monthly contributions
+- Validate contribution amounts
+- Automatically determine payment status
+
+### Authentication & Authorization
+
+- Stateless HTTP Basic authentication
+- BCrypt password hashing
+- Role-based authorization
+- Administrator-controlled write operations
+- Authenticated access to contribution data
+- No self-service account registration
+
+### Data Integrity
+
+- Financial amounts represented using `BigDecimal`
+- Server-controlled payment status
+- Server-controlled payment date
+- DTO-based request handling
+- Transactional contribution operations
+- Domain-specific exception handling
+
+### API Reliability
+
+- Meaningful HTTP status codes
+- Centralized exception handling
+- Health-check endpoint
+- OpenAPI documentation
+- Swagger UI
+
+### Automated Testing
+
+The project includes automated tests covering:
+
+- Business logic
+- Authentication and authorization
+- API error responses
+- Data validation
+- Password protection
+- Application context
+- Role seeding
+
+---
+
+## 🏗️ Architecture
+
+The application follows a layered Spring Boot architecture:
+
+```text
+Client
+   │
+   ▼
+Controller
+   │
+   ▼
+Service
+   │
+   ▼
+Repository
+   │
+   ▼
+PostgreSQL
+```
+
+**Main Layers**
+
+| Layer | Responsibility |
+|-------|---------------|
+| Controller | Handles HTTP requests and API responses. |
+| Service | Contains application and business logic. |
+| Repository | Provides database access through Spring Data JPA. |
+| Model | Contains the application's domain entities. |
+| DTO | Controls data entering and leaving the API. |
+| Exception | Provides centralized handling of application errors. |
+| Config | Contains security configuration, database initialization, and user authentication components. |
+
+### 📁 Project Structure
 
 ```
 src/main/java/com/investment/Group/management/
-├── Config/         SecurityConfig, DatabaseSeeder, DatabaseUserDetailsService
-├── Controller/     ContributionController
-├── Service/        ContributionService
-├── Repository/     ContributionRepository, MemberRepository, UserRepository, RoleRepository
-├── model/          User, Member, Contribution, Role, Admin, Business
-├── dto/            ContributionRequest, ContributionResponse
-└── Exception/      GlobalExceptionHandler, MemberNotFoundException,
-                    DuplicateContributionException
+│
+├── Config/
+│   ├── SecurityConfig
+│   ├── DatabaseSeeder
+│   └── DatabaseUserDetailsService
+│
+├── Controller/
+│   └── ContributionController
+│
+├── Service/
+│   └── ContributionService
+│
+├── Repository/
+│   ├── ContributionRepository
+│   ├── MemberRepository
+│   ├── UserRepository
+│   └── RoleRepository
+│
+├── model/
+│   ├── User
+│   ├── Member
+│   ├── Contribution
+│   ├── Role
+│   ├── Admin
+│   └── Business
+│
+├── dto/
+│   ├── ContributionRequest
+│   └── ContributionResponse
+│
+└── Exception/
+    ├── GlobalExceptionHandler
+    ├── MemberNotFoundException
+    └── DuplicateContributionException
 ```
 
-## Prerequisites
+---
 
-- JDK 21
-- PostgreSQL 16 with a database named `Family_investment_scheme_db`
+## 🔐 Security
 
-## Configuration
+InvestHand uses stateless HTTP Basic authentication. Credentials are supplied through the `Authorization` header and the server does not maintain an authenticated session.
 
-**No credentials are committed to the repository.** Configuration is read from
-environment variables:
+### Authorization Rules
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/Family_investment_scheme_db` | JDBC URL |
-| `DB_USERNAME` | `postgres` | Database user |
-| `DB_PASSWORD` | *(empty)* | Database password — **must be set locally** |
-| `ADMIN_USERNAME` | `admin` | Username for the seeded admin |
-| `ADMIN_EMAIL` | `admin@example.com` | Email for the seeded admin |
-| `ADMIN_PASSWORD` | *(empty)* | Password for the seeded admin account |
+| Operation | Access |
+|---|---|
+| Read contribution data | Authenticated users |
+| Create contribution | ADMIN |
+| Health endpoint | Public |
+| Swagger/OpenAPI | Public |
+| User registration | Not available |
 
-`DB_PASSWORD` and `ADMIN_PASSWORD` have no defaults. If `DB_PASSWORD` is unset
-the app starts and then fails with `The server requested SCRAM-based
-authentication, but no password was provided` — the empty value is sent rather
-than the connection being refused earlier, so the error looks like a Postgres
-problem rather than a missing variable.
+Passwords are hashed using BCrypt and are never returned through API responses. CSRF protection is disabled because the API uses stateless authentication rather than browser session cookies.
 
-For local development you can instead create `src/main/resources/application-local.properties`
-(git-ignored):
+---
 
-```properties
-spring.datasource.password=your-local-password
-```
+## 🔌 REST API
 
-then run with:
+### Contributions
 
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-On first startup the seeder creates the `ADMIN` and `MEMBER` roles and, if
-`ADMIN_PASSWORD` is set, an initial administrator with a BCrypt-hashed
-password. No admin is created when the variable is absent — there is no
-default password to guess. **Change it before using the app anywhere real.**
-
-## Build and run
-
-```bash
-./mvnw clean package      # build
-./mvnw spring-boot:run    # run on http://localhost:8080
-```
-
-The schema is managed by Hibernate with `ddl-auto=update`, so tables are
-created on first start. Note that `update` only ever *adds* — it never alters
-an existing column's type or drops a column, so a column that was created as
-`double precision` stays that way. See [Schema notes](#schema-notes).
-
-Interactive API docs (requires the app running):
-
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI JSON: http://localhost:8080/v3/api-docs
-
-## Authentication
-
-The API is **stateless** and authenticates with **HTTP Basic**: credentials are
-sent in an `Authorization` header on every request and nothing is stored
-server-side.
-
-```bash
-curl -u "admin:your-password" http://localhost:8080/api/contributions
-```
-
-Rules:
-
-- Reads require any authenticated user.
-- Writes require the `ADMIN` role, enforced by `@PreAuthorize` on the
-  controller.
-- `/actuator/health`, `/swagger-ui/**` and `/v3/api-docs/**` are public.
-- There is no self-service signup; accounts are created by an administrator.
-
-**CSRF is disabled, deliberately.** CSRF protects against the browser silently
-attaching ambient authority — a session cookie — to a cross-site request. That
-does not apply here: the session policy is `STATELESS`, so no `JSESSIONID` is
-ever issued, and credentials travel in an explicit header that a cross-site
-HTML form post cannot set.
-
-This is not merely redundant. CSRF was originally left enabled, and because the
-default token repository needs a session to store the token in — and there is
-neither a session nor an endpoint to issue one — **every `POST` failed with a
-`403` no client could satisfy.** If authentication ever moves to cookies or
-sessions, CSRF must be re-enabled and a token endpoint added.
-
-## API
-
-| Method | Path | Role | Description |
+| Method | Endpoint | Access | Description |
 |---|---|---|---|
-| `POST` | `/api/contributions/{memberId}` | ADMIN | Record a contribution. Returns `201`. |
-| `GET` | `/api/contributions` | any | List all contributions. |
-| `GET` | `/api/contributions/member/{memberId}` | any | List one member's contributions. |
-| `GET` | `/actuator/health` | public | Health probe for monitoring. |
+| POST | `/api/contributions/{memberId}` | ADMIN | Record a contribution |
+| GET | `/api/contributions` | Authenticated | List contributions |
+| GET | `/api/contributions/member/{memberId}` | Authenticated | Get member contributions |
+| GET | `/actuator/health` | Public | Application health check |
 
-Example:
+### Example Request
 
 ```bash
 curl -X POST http://localhost:8080/api/contributions/1 \
@@ -140,17 +212,52 @@ curl -X POST http://localhost:8080/api/contributions/1 \
   -d '{"amount": 500.00, "month": "JANUARY"}'
 ```
 
-### Error responses
+---
 
-Domain failures return meaningful status codes rather than a blanket `500`:
+## 📊 Business Rules
 
-| Status | Cause |
+InvestHand enforces important business rules at the backend level.
+
+### Monthly Contribution Rule
+
+A member can contribute at most once per month. The month value is normalized to uppercase to prevent duplicate records caused by different capitalization.
+
+### Payment Status
+
+Payments made on or before the 5th are recorded as:
+
+**PAID**
+
+Payments made after the 5th are recorded as:
+
+**LATE**
+
+The server determines:
+- Payment status
+- Payment date
+- Member association
+
+These values cannot be supplied directly by the client.
+
+### Financial Precision
+
+Financial values use `BigDecimal` rather than `double` to avoid floating-point precision problems when handling monetary values.
+
+---
+
+## ⚠️ API Error Handling
+
+The API returns meaningful HTTP status codes instead of treating every failure as a server error.
+
+| Status | Meaning |
 |---|---|
-| `400` | Amount missing, zero, negative, or malformed JSON |
-| `401` | Missing or invalid credentials |
-| `403` | Authenticated but not an ADMIN (write attempted) |
-| `404` | No member with that id |
-| `409` | Contribution already recorded for that month |
+| 400 | Invalid or malformed request |
+| 401 | Missing or invalid credentials |
+| 403 | Authenticated user lacks required privileges |
+| 404 | Member not found |
+| 409 | Duplicate contribution |
+
+### Example:
 
 ```json
 {
@@ -162,85 +269,174 @@ Domain failures return meaningful status codes rather than a blanket `500`:
 }
 ```
 
-## Business rules
+---
 
-- A member may contribute at most once per month. `month` is normalised to
-  upper case so `january` cannot bypass the duplicate check; when omitted, the
-  current month is used.
-- Payments on or before the 5th are recorded as `PAID`, later ones as `LATE`.
-  The server always sets `status`, `paymentDate` and `member` — clients cannot
-  supply them, which is enforced by binding to a request DTO rather than the
-  entity.
-- Amounts are validated with `BigDecimal.compareTo`, not `equals`, because
-  `equals` is scale-sensitive: `100.00` and `100` are equal in value but not
-  under `equals`.
+## 🧪 Testing
 
-## Tests
+The project uses an automated test suite with JUnit 5, Mockito, MockMvc, and H2.
+
+Run the tests with:
 
 ```bash
 ./mvnw test
 ```
 
-24 tests run against in-memory H2, so no local PostgreSQL instance is required
-and real data is never touched.
+The test suite covers:
 
-| Suite | Covers |
-|---|---|
-| `ContributionServiceTest` | Duplicate detection, amount validation, month normalisation, money precision |
-| `ContributionApiSecurityTest` | Auth enforcement, 401/403/404/409 status codes, no password in responses |
-| `UserSerializationTest` | Regression test: credentials never serialised to JSON |
-| `GroupManagementApplicationTests` | Context loads, roles seeded, admin password is a BCrypt hash |
+- Contribution validation
+- Duplicate contribution detection
+- Month normalization
+- Monetary precision
+- Authentication
+- Authorization
+- API error responses
+- Password protection
+- Application context
+- Role initialization
 
-## Schema notes
+Tests use an in-memory H2 database, so PostgreSQL is not required when running the test suite.
 
-Two things are worth knowing before changing the entity classes.
+---
 
-**`month` is a column name that differs between databases.** It is unreserved in
-PostgreSQL, so `month varchar(255)` is valid there, but H2 *reserves* `MONTH`
-and rejects it. When it was rejected, Hibernate logged a DDL failure, continued
-silently, and left the `contributions` table missing entirely — every write then
-failed with `Table "CONTRIBUTIONS" not found`. The fix is in the test
-datasource, not the entity:
+## 🔄 Continuous Integration
 
-```properties
-# application-test.properties
-spring.datasource.url=jdbc:h2:mem:investhand;...;NON_KEYWORDS=MONTH
+The project uses GitHub Actions for continuous integration.
+
+The CI pipeline runs on:
+- Pushes to `main`
+- Pull requests targeting `main`
+
+The workflow:
+1. Sets up JDK 21
+2. Builds the project
+3. Runs the test suite
+4. Executes Maven verification
+5. Packages the application
+6. Uploads the generated JAR as an artifact
+
+This helps ensure that changes are automatically validated before being merged.
+
+---
+
+## ⚙️ Running Locally
+
+### Prerequisites
+
+Install:
+- JDK 21
+- PostgreSQL 16
+
+Create a PostgreSQL database:
+
+```sql
+CREATE DATABASE Family_investment_scheme_db;
 ```
 
-Production keeps `month` so it matches the existing data.
+### Configuration
 
-**The database has drifted from the entities.** Two items are mapped by neither:
+The application reads configuration from environment variables:
 
-- `users.active` (`boolean`) — the `User` entity has no such field.
-- `user_roles` — a proper join table with foreign keys to `users` and `roles`,
-  unused by the code. The model stores `role` as a plain string on `User`
-  instead.
+```bash
+DB_URL=jdbc:postgresql://localhost:5432/Family_investment_scheme_db
+DB_USERNAME=postgres
+DB_PASSWORD=your-password
 
-Reconciling these is a design decision, not a mechanical fix: either map the
-entities onto them, or drop them if they are vestigial.
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=your-admin-password
+```
 
-## Design notes
+No database or administrator credentials are committed to the repository.
 
-- **Money is `BigDecimal`, never `double`.** Binary floating point cannot
-  represent `0.10` exactly, so summing amounts with `double` drifts.
-- **Passwords are never serialised.** `@JsonIgnore` sits on both the `User`
-  password field and its getter, so leaking credentials is impossible even if a
-  future controller returns an entity directly. Controllers also return DTOs.
-- **Writes are transactional.** The duplicate check and the insert must be
-  atomic, or two simultaneous requests can both pass the check.
-- **Repositories are top-level interfaces.** They were previously nested inside
-  plain wrapper classes that Spring never registered as beans.
-- **Failed DDL is silent.** Hibernate logs a warning for a rejected `CREATE
-  TABLE` and carries on, so a schema error shows up much later as a confusing
-  runtime failure. When adding a column, check the startup log for
-  `GenerationTarget encountered exception accepting command`.
+### Build
 
-## CI
+```bash
+./mvnw clean package
+```
 
-`.github/workflows/ci.yml` runs on every push and pull request to `main`:
-JDK 21, `mvn -B clean verify`, and the packaged jar uploaded as an artifact. No
-database credentials are needed because the tests run on H2.
+### Run
 
-## License
+```bash
+./mvnw spring-boot:run
+```
 
-Private. All rights reserved.
+The application runs on:
+
+```
+http://localhost:8080
+```
+
+---
+
+## 📚 API Documentation
+
+When the application is running, interactive API documentation is available through Swagger UI:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+OpenAPI specification:
+
+```
+http://localhost:8080/v3/api-docs
+```
+
+---
+
+## 🔒 Security Considerations
+
+Security was considered throughout the application design. The project includes:
+
+- BCrypt password hashing
+- Role-based authorization
+- Stateless authentication
+- Protected write operations
+- DTO-based request handling
+- Password exclusion from JSON serialization
+- Environment-based credentials
+- Centralized exception handling
+- No credentials committed to source control
+
+---
+
+## 🧠 Engineering Practices
+
+InvestHand demonstrates several backend engineering principles:
+
+- Layered architecture
+- Separation of concerns
+- RESTful API design
+- DTO-based request/response handling
+- Transactional operations
+- Database persistence with JPA/Hibernate
+- Secure password handling
+- Role-based access control
+- Automated testing
+- Continuous integration
+- Environment-based configuration
+- Financial precision with `BigDecimal`
+- Domain-specific exception handling
+
+---
+
+## 📌 Project Status
+
+InvestHand is an actively developed software project focused on building reliable backend systems for investment-group management. Future development can extend the platform with additional management, analytics, and intelligent capabilities.
+
+---
+
+## 👨‍💻 Developer
+
+**Samson Mumba**  
+Computer Science student focused on:  
+Software Engineering · Artificial Intelligence · Backend Systems · DevOps
+
+GitHub: [@mbc01](https://github.com/mbc01)  
+LinkedIn: [Samson Chibau Mumba](https://linkedin.com/in/samson-chibau-mumba-97b5b8396)
+
+---
+
+## 📄 License
+
+Private project. All rights reserved.
